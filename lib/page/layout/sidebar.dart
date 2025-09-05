@@ -72,7 +72,7 @@ class _SidebarPanelState extends State<SidebarPanel> {
                   if (kIsWindows || kIsLinux || kIsMobile || kIsBrowser) ...[
                     Image.asset('assets/logo.png', width: 24, height: 24),
                     const Gap(size: 8),
-                    CText(text: 'ChatMCP', size: 12, fontWeight: FontWeight.w700),
+                    CText(text: 'Rovena', size: 12, fontWeight: FontWeight.w700),
                   ],
                   const Spacer(),
                   InkIcon(icon: CupertinoIcons.search, onTap: toggleSearchVisibility, tooltip: AppLocalizations.of(context)!.search),

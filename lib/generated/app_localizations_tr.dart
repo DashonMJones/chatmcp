@@ -522,7 +522,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get checkUpdate => 'Güncellemeleri Kontrol Et';
 
   @override
-  String get appDescription => 'ChatMCP, yapay zekayı daha fazla insana ulaştırmayı hedefleyen, platformlar arası bir yapay zeka istemcisidir.';
+  String get appDescription => 'Rovena, yapay zekayı daha fazla insana ulaştırmayı hedefleyen, platformlar arası bir yapay zeka istemcisidir.';
 
   @override
   String get visitWebsite => 'Web Sitesi';

@@ -21,26 +21,38 @@ class ClaudeCodeClient extends BaseLLMClient {
   /// Path or name of the Claude Code CLI executable. Defaults to `claude`.
   final String executable;
 
-  ClaudeCodeClient({String? executablePath}) : executable = (executablePath == null || executablePath.isEmpty) ? 'claude' : executablePath;
+  ClaudeCodeClient({String? executablePath}) : executable = (executablePath == null || executablePath.isEmpty) ? '/home/dashon/.local/bin/claude' : executablePath;
 
   @override
   Future<LLMResponse> chatCompletion(CompletionRequest request) async {
     final prompt = _buildPromptFromMessages(request.messages);
 
     // Use JSON output for reliable parsing
-    final args = <String>['-p', prompt, '--output-format', 'json'];
+    final args = <String>['-p', prompt, '--output-format', 'json', '--dangerously-skip-permissions'];
+
+    Logger.root.info('🚀 ClaudeCodeClient: Starting chatCompletion');
+    Logger.root.info('📝 ClaudeCodeClient: Prompt length: ${prompt.length}');
+    Logger.root.info('⚙️  ClaudeCodeClient: Args: ${args.join(' ')}');
 
     try {
-      final result = await Process.run(executable, args, runInShell: true);
+      Logger.root.info('🔄 ClaudeCodeClient: Calling Process.run...');
+      final result = await Process.run(executable, args, runInShell: true, workingDirectory: '/home/dashon');
+
+      Logger.root.info('✅ ClaudeCodeClient: Process completed with exit code: ${result.exitCode}');
 
       if (result.exitCode != 0) {
+        Logger.root.severe('❌ ClaudeCodeClient: Process failed - stderr: ${result.stderr}');
         throw Exception(
           result.stderr is String && (result.stderr as String).isNotEmpty ? result.stderr : 'Claude Code CLI exited with ${result.exitCode}',
         );
       }
 
       final output = result.stdout is String ? result.stdout as String : utf8.decode((result.stdout as List<int>));
+      Logger.root.info('📋 ClaudeCodeClient: Output length: ${output.length}');
+      
       final content = _parseClaudeCodeJsonOutput(output);
+      Logger.root.info('🎯 ClaudeCodeClient: Parsed content length: ${content.length}');
+      
       return LLMResponse(content: content);
     } catch (e) {
       // Surface a structured error via BaseLLMClient.handleError contract
@@ -52,58 +64,55 @@ class ClaudeCodeClient extends BaseLLMClient {
   Stream<LLMResponse> chatStreamCompletion(CompletionRequest request) async* {
     final prompt = _buildPromptFromMessages(request.messages);
 
-    // Stream JSON lines so we can emit partial updates when possible.
-    final args = <String>['-p', prompt, '--output-format', 'stream-json'];
+    // Claude CLI doesn't support true streaming, so we use regular JSON and simulate streaming
+    final args = <String>['-p', prompt, '--output-format', 'json', '--dangerously-skip-permissions'];
 
-    Process? process;
+    Logger.root.info('🚀 ClaudeCodeClient STREAM: Starting chatStreamCompletion');
+    Logger.root.info('📝 ClaudeCodeClient STREAM: Prompt length: ${prompt.length}');
+    Logger.root.info('⚙️  ClaudeCodeClient STREAM: Args: ${args.join(' ')}');
+
     try {
-      process = await Process.start(executable, args, runInShell: true);
+      Logger.root.info('🔄 ClaudeCodeClient STREAM: Running Process.run...');
+      final result = await Process.run(
+        executable, 
+        args, 
+        workingDirectory: '/home/dashon'
+      ).timeout(Duration(seconds: 60));
 
-      final stdoutLines = process.stdout.transform(utf8.decoder).transform(const LineSplitter());
-      final stderrBuffer = StringBuffer();
-
-      // Drain stderr to help debugging on failure
-      unawaited(process.stderr.transform(utf8.decoder).forEach(stderrBuffer.write));
-
-      String aggregated = '';
-
-      await for (final line in stdoutLines) {
-        // Expecting JSONL objects, one per line
-        try {
-          final obj = jsonDecode(line);
-          final type = obj['type'];
-          if (type == 'assistant') {
-            final contentPiece = _extractTextFromAssistantMessage(obj['message']);
-            if (contentPiece.isNotEmpty) {
-              aggregated += contentPiece;
-              yield LLMResponse(content: contentPiece);
-            }
-          } else if (type == 'result') {
-            // Final result line; emit any missing content if stream lacked assistant pieces
-            final resultText = (obj['result'] ?? '').toString();
-            if (aggregated.isEmpty && resultText.isNotEmpty) {
-              yield LLMResponse(content: resultText);
-            }
-          }
-        } catch (_) {
-          // If a line isn't valid JSON, ignore it; CLI may print logs in verbose modes
-          continue;
-        }
+      Logger.root.info('✅ ClaudeCodeClient STREAM: Process completed with exit code: ${result.exitCode}');
+      
+      if (result.exitCode != 0) {
+        final errorMsg = result.stderr?.toString() ?? 'Unknown error';
+        Logger.root.severe('❌ ClaudeCodeClient STREAM: Process failed: $errorMsg');
+        throw Exception('Claude Code CLI exited with ${result.exitCode}: $errorMsg');
       }
 
-      final exitCode = await process.exitCode;
-      if (exitCode != 0) {
-        throw Exception(stderrBuffer.isNotEmpty ? stderrBuffer.toString() : 'Claude Code CLI exited with $exitCode');
+      final output = result.stdout.toString();
+      Logger.root.info('📄 ClaudeCodeClient STREAM: Output length: ${output.length}');
+      
+      if (output.trim().isEmpty) {
+        Logger.root.warning('⚠️  ClaudeCodeClient STREAM: Empty output from CLI');
+        return;
+      }
+
+      try {
+        final obj = jsonDecode(output);
+        Logger.root.info('📦 ClaudeCodeClient STREAM: Parsed JSON type: ${obj['type']}');
+        
+        if (obj['type'] == 'result' && obj['result'] != null) {
+          final content = obj['result'].toString();
+          Logger.root.info('💬 ClaudeCodeClient STREAM: Yielding result: ${content.length} chars');
+          yield LLMResponse(content: content);
+        } else {
+          Logger.root.warning('⚠️  ClaudeCodeClient STREAM: Unexpected JSON structure: ${obj.keys}');
+        }
+      } catch (jsonError) {
+        Logger.root.severe('❌ ClaudeCodeClient STREAM: JSON parse error: $jsonError');
+        Logger.root.severe('📄 Raw output: $output');
+        throw Exception('Failed to parse Claude Code response: $jsonError');
       }
     } catch (e) {
       throw await handleError(e, 'Claude Code', executable, jsonEncode({'args': args}));
-    } finally {
-      // Ensure process is killed if still alive
-      if (process != null) {
-        try {
-          process.kill(ProcessSignal.sigterm);
-        } catch (_) {}
-      }
     }
   }
 

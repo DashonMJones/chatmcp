@@ -44,7 +44,7 @@ class AppInfo extends StatelessWidget {
 
               // App Name
               Text(
-                'ChatMCP',
+                'Rovena',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.getThemeTextColor(context)),
               ),
 

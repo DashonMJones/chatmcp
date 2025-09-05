@@ -1063,7 +1063,7 @@ abstract class AppLocalizations {
   /// No description provided for @appDescription.
   ///
   /// In en, this message translates to:
-  /// **'ChatMCP is a cross-platform AI client, dedicated to making AI accessible to more people.'**
+  /// **'Rovena is a cross-platform AI client, dedicated to making AI accessible to more people.'**
   String get appDescription;
 
   /// No description provided for @visitWebsite.

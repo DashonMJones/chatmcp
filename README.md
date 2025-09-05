@@ -45,7 +45,7 @@ clear explanations, interactive diagrams, and even allows for real-time Q&A with
 
 ### Data Sync
 
-ChatMCP applications can sync data within the same local area network
+Rovena applications can sync data within the same local area network
 
 ![Data sync](./docs/preview/data-sync.webp)
 
@@ -76,7 +76,7 @@ sudo apt install nodejs npm
 
 ### Linux Requirements (Ubuntu 22.04 and 24.04)
 
-For running ChatMCP AppImage/DEB on Ubuntu and derivatives, install the following runtime packages:
+For running Rovena AppImage/DEB on Ubuntu and derivatives, install the following runtime packages:
 
 - AppImage (FUSE): `libfuse2`
 - GTK 3: `libgtk-3-0`
@@ -111,7 +111,7 @@ Optional (recommended): `mesa-vulkan-drivers`, `mesa-utils` (for diagnostics lik
 
 ## Data Storage
 
-ChatMCP follows platform-specific best practices for data storage:
+Rovena follows platform-specific best practices for data storage:
 
 ### Storage Locations
 

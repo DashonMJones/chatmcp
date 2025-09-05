@@ -233,7 +233,7 @@ class OAuthDiscoveryService {
       _logger.info('Attempting dynamic client registration at: $registrationEndpoint');
       
       final clientMetadata = {
-        'client_name': 'ChatMCP Client',
+        'client_name': 'Rovena Client',
         'redirect_uris': [_generateRedirectUri()],
         'grant_types': ['authorization_code', 'refresh_token'],
         'response_types': ['code'],

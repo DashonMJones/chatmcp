@@ -22,7 +22,15 @@ class LLMFactory {
       case LLMProvider.claude:
         return ClaudeClient(apiKey: apiKey, baseUrl: baseUrl);
       case LLMProvider.claudeCode:
-        return ClaudeCodeClient();
+        Logger.root.info('🏭 LLMFactory: Creating ClaudeCodeClient');
+        try {
+          final client = ClaudeCodeClient();
+          Logger.root.info('✅ LLMFactory: ClaudeCodeClient created successfully');
+          return client;
+        } catch (e) {
+          Logger.root.severe('❌ LLMFactory: Failed to create ClaudeCodeClient: $e');
+          rethrow;
+        }
       case LLMProvider.deepseek:
         return DeepSeekClient(apiKey: apiKey, baseUrl: baseUrl);
       case LLMProvider.ollama:
@@ -67,12 +75,17 @@ class LLMFactoryHelper {
   }
 
   static BaseLLMClient createFromModel(llm_model.Model currentModel) {
+    Logger.root.info('🔍 LLMFactory: Creating client for model - providerId: ${currentModel.providerId}, name: ${currentModel.name}, apiStyle: ${currentModel.apiStyle}');
+    
     try {
       final setting = ProviderManager.settingsProvider.apiSettings.firstWhere((element) => element.providerId == currentModel.providerId);
+
+      Logger.root.info('⚙️  LLMFactory: Found setting for provider ${currentModel.providerId} - enabled: ${setting.enable ?? true}');
 
       // Check if the provider is enabled (null means enabled, only false means disabled)
       final isEnabled = setting.enable ?? true;
       if (!isEnabled) {
+        Logger.root.warning('❌ LLMFactory: Provider ${currentModel.providerId} is disabled');
         throw Exception('Provider ${currentModel.providerId} is disabled');
       }
 
@@ -83,10 +96,13 @@ class LLMFactoryHelper {
       _logApiKeyUsage(currentModel.providerId, currentModel.name, apiKey);
 
       var provider = LLMFactoryHelper.providerMap[currentModel.providerId];
+      Logger.root.info('🗺️  LLMFactory: Mapped provider from providerId: $provider');
 
       provider ??= LLMProvider.values.byName(currentModel.apiStyle);
+      Logger.root.info('🎯 LLMFactory: Final provider selection: $provider');
 
       // Create LLM client
+      Logger.root.info('🏭 LLMFactory: About to create client for provider: $provider');
       return LLMFactory.create(provider, apiKey: apiKey, baseUrl: baseUrl);
     } catch (e) {
       // If no matching provider is found, use default OpenAI

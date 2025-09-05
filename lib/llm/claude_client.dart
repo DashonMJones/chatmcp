@@ -11,9 +11,24 @@ class ClaudeClient extends BaseLLMClient {
   final String baseUrl;
   final Map<String, String> _headers;
 
-  ClaudeClient({required this.apiKey, String? baseUrl})
-    : baseUrl = (baseUrl == null || baseUrl.isEmpty) ? 'https://api.anthropic.com' : baseUrl,
-      _headers = {'Content-Type': 'application/json; charset=utf-8', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01'};
+  ClaudeClient({String? apiKey, String? baseUrl})
+    : apiKey = apiKey ?? '',
+      baseUrl = (baseUrl == null || baseUrl.isEmpty) ? 'https://api.anthropic.com' : baseUrl,
+      _headers = _buildHeaders(apiKey, baseUrl);
+
+  static Map<String, String> _buildHeaders(String? apiKey, String? baseUrl) {
+    final headers = {'Content-Type': 'application/json; charset=utf-8'};
+    
+    // Only add API key and version for Anthropic's cloud API
+    if (baseUrl == null || baseUrl.isEmpty || baseUrl.contains('anthropic.com')) {
+      if (apiKey != null && apiKey.isNotEmpty) {
+        headers['x-api-key'] = apiKey;
+        headers['anthropic-version'] = '2023-06-01';
+      }
+    }
+    
+    return headers;
+  }
 
   @override
   Future<LLMResponse> chatCompletion(CompletionRequest request) async {
@@ -21,22 +36,26 @@ class ClaudeClient extends BaseLLMClient {
 
     final messages = chatMessageToClaudeMessage(request.messages);
 
-    final body = {'model': request.model, 'messages': messages};
+    final body = {
+      'model': request.model, 
+      'messages': messages,
+      'max_tokens': request.modelSetting?.maxTokens ?? 4096
+    };
 
     addModelSettingsToBody(body, request.modelSetting);
 
     if (request.tools != null && request.tools!.isNotEmpty) {
-      body['tools'] = {
-        'function_calling': {'tools': request.tools},
-      };
+      body['tools'] = request.tools as List<Map<String, dynamic>>;
     }
 
     final endpoint = '$baseUrl/messages';
 
     try {
+      Logger.root.info('Claude request: ${jsonEncode(body)}');
       final response = await httpClient.post(Uri.parse(endpoint), headers: _headers, body: jsonEncode(body));
 
       final responseBody = utf8.decode(response.bodyBytes);
+      Logger.root.info('Claude response status: ${response.statusCode}');
       Logger.root.fine('Claude response: $responseBody');
 
       if (response.statusCode >= 400) {
@@ -69,14 +88,17 @@ class ClaudeClient extends BaseLLMClient {
   Stream<LLMResponse> chatStreamCompletion(CompletionRequest request) async* {
     final messages = chatMessageToClaudeMessage(request.messages);
 
-    final body = {'model': request.model, 'messages': messages, 'stream': true};
+    final body = {
+      'model': request.model, 
+      'messages': messages, 
+      'stream': true,
+      'max_tokens': request.modelSetting?.maxTokens ?? 4096
+    };
 
     addModelSettingsToBody(body, request.modelSetting);
 
     if (request.tools != null && request.tools!.isNotEmpty) {
-      body['tools'] = {
-        'function_calling': {'tools': request.tools},
-      };
+      body['tools'] = request.tools as List<Map<String, dynamic>>;
       body['tool_choice'] = {'type': 'any'};
     }
 

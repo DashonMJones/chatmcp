@@ -1,4 +1,4 @@
-display_name: ChatMCP
+display_name: Rovena
 
 icon: assets/logo.png
 
@@ -8,7 +8,7 @@ keywords:
   - Chat
   - MCP
 
-generic_name: AI Chat Application
+generic_name: Rovena AI Application
 
 categories:
   - Office

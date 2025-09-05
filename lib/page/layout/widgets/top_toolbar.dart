@@ -209,7 +209,7 @@ class TopToolbar extends StatelessWidget {
                 if (!kIsMacOS) ...[
                   Image.asset('assets/logo.png', width: 24, height: 24),
                   const Gap(size: 8),
-                  CText(text: 'ChatMCP', size: 12, fontWeight: FontWeight.w700),
+                  CText(text: 'Rovena', size: 12, fontWeight: FontWeight.w700),
                   const Gap(size: 24),
                 ],
 

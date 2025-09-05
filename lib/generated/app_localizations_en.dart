@@ -523,7 +523,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkUpdate => 'Update Check';
 
   @override
-  String get appDescription => 'ChatMCP is a cross-platform AI client, dedicated to making AI accessible to more people.';
+  String get appDescription => 'Rovena is a cross-platform AI client, dedicated to making AI accessible to more people.';
 
   @override
   String get visitWebsite => 'website';

@@ -3,7 +3,7 @@
 app_id: f2821c52-2345-4ef6-99f2-b22c561359e6
 publisher: YourName
 publisher_url: https://github.com/yourusername/chatmcp
-display_name: ChatMCP
+display_name: Rovena
 create_desktop_icon: true
 # 这里的路径是相对于项目根目录的路径；图标格式必须是ico格式，不能是png或其它
 setup_icon_file: windows/runner/resources/app_icon.ico

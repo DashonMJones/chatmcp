@@ -523,7 +523,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get checkUpdate => 'Update-Prüfung';
 
   @override
-  String get appDescription => 'ChatMCP ist ein plattformübergreifender KI-Client, der darauf abzielt, KI für mehr Menschen zugänglich zu machen.';
+  String get appDescription => 'Rovena ist ein plattformübergreifender KI-Client, der darauf abzielt, KI für mehr Menschen zugänglich zu machen.';
 
   @override
   String get visitWebsite => 'Website';
